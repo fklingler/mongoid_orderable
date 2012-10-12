@@ -6,12 +6,12 @@ module Mongoid::Orderable
       configuration = {
         :column => :position,
         :index => true,
-        :scope => nil
+        :scope => nil,
+        :scope_class => nil
       }
 
       configuration.merge! options if options.is_a?(Hash)
       configuration[:scope] = "#{configuration[:scope]}_id".to_sym if configuration[:scope].is_a?(Symbol) && configuration[:scope].to_s !~ /_id$/
-
       field configuration[:column], :type => Integer
       if configuration[:index]
         if MongoidOrderable.mongoid2?
@@ -33,6 +33,10 @@ module Mongoid::Orderable
 
       define_method :orderable_column do
         configuration[:column]
+      end
+
+      define_method :scope_class do
+        configuration[:scope_class] || self
       end
 
       before_save :add_to_list
@@ -110,7 +114,7 @@ private
     if embedded?
       send(metadata.inverse).send(metadata.name).orderable_scope(self)
     else
-      self.class.orderable_scope(self)
+      scope_class.orderable_scope(self)
     end
   end
 
